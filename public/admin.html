@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Redirection Service</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <h1>Link Manager</h1>
+            <p class="subtitle">Set your destination link for instant redirection.</p>
+            
+            <div class="input-group">
+                <label for="redirectUrl">Target URL</label>
+                <input type="url" id="redirectUrl" placeholder="https://example.com" required>
+            </div>
+            
+            <button id="saveBtn" class="primary-btn">
+                <span>Update Link</span>
+                <div class="loader" id="loader"></div>
+            </button>
+            
+            <div id="statusMessage" class="status-message"></div>
+            
+            <div class="info-section">
+                <p>Visitors to <code>/</code> will be redirected to the URL above.</p>
+                <a href="/" target="_blank" class="preview-link">Test Redirection &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const redirectUrlInput = document.getElementById('redirectUrl');
+        const saveBtn = document.getElementById('saveBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const loader = document.getElementById('loader');
+
+        // Fetch current config
+        async function fetchConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                redirectUrlInput.value = data.redirectUrl;
+            } catch (err) {
+                showStatus('Failed to load configuration', 'error');
+            }
+        }
+
+        async function updateConfig() {
+            const redirectUrl = redirectUrlInput.value;
+            if (!redirectUrl) return;
+
+            saveBtn.disabled = true;
+            loader.style.display = 'block';
+            statusMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ redirectUrl })
+                });
+
+                if (response.ok) {
+                    showStatus('Link updated successfully!', 'success');
+                } else {
+                    showStatus('Failed to update link.', 'error');
+                }
+            } catch (err) {
+                showStatus('Network error occurred.', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        function showStatus(msg, type) {
+            statusMessage.textContent = msg;
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        saveBtn.addEventListener('click', updateConfig);
+        window.addEventListener('DOMContentLoaded', fetchConfig);
+    </script>
+</body>
+</html>
