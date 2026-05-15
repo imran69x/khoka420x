@@ -11,22 +11,22 @@
     <div class="container">
         <div class="glass-card">
             <h1>Link Manager</h1>
-            <p class="subtitle">Set your destination link for instant redirection.</p>
-            
             <div class="input-group">
                 <label for="password">Admin Password</label>
                 <input type="password" id="password" placeholder="Enter password" required>
             </div>
 
-            <div class="input-group">
-                <label for="redirectUrl">Target URL</label>
-                <input type="url" id="redirectUrl" placeholder="https://example.com" required>
+            <div id="adminControls" style="display: none; animation: fadeIn 0.5s ease-out;">
+                <div class="input-group">
+                    <label for="redirectUrl">Target URL</label>
+                    <input type="url" id="redirectUrl" placeholder="https://example.com" required>
+                </div>
+                
+                <button id="saveBtn" class="primary-btn">
+                    <span>Update Link</span>
+                    <div class="loader" id="loader"></div>
+                </button>
             </div>
-            
-            <button id="saveBtn" class="primary-btn">
-                <span>Update Link</span>
-                <div class="loader" id="loader"></div>
-            </button>
             
             <div id="statusMessage" class="status-message"></div>
             
@@ -39,10 +39,24 @@
 
     <script>
         const passwordInput = document.getElementById('password');
+        const adminControls = document.getElementById('adminControls');
         const redirectUrlInput = document.getElementById('redirectUrl');
         const saveBtn = document.getElementById('saveBtn');
         const statusMessage = document.getElementById('statusMessage');
         const loader = document.getElementById('loader');
+
+        const SECRET_KEY = 'noyon8181';
+
+        // Reveal controls if password matches
+        passwordInput.addEventListener('input', () => {
+            if (passwordInput.value === SECRET_KEY) {
+                adminControls.style.display = 'block';
+                statusMessage.style.display = 'none';
+                fetchConfig(); // Load current URL when logged in
+            } else {
+                adminControls.style.display = 'none';
+            }
+        });
 
         // Fetch current config
         async function fetchConfig() {
@@ -97,7 +111,6 @@
         }
 
         saveBtn.addEventListener('click', updateConfig);
-        window.addEventListener('DOMContentLoaded', fetchConfig);
     </script>
 </body>
 </html>
