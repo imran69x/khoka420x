@@ -21,9 +21,14 @@
                     <label for="redirectUrl">Target URL</label>
                     <input type="url" id="redirectUrl" placeholder="https://example.com" required>
                 </div>
+
+                <div class="input-group">
+                    <label for="newPassword">Change Password (Optional)</label>
+                    <input type="password" id="newPassword" placeholder="Leave blank to keep same">
+                </div>
                 
                 <button id="saveBtn" class="primary-btn">
-                    <span>Update Link</span>
+                    <span>Update Settings</span>
                     <div class="loader" id="loader"></div>
                 </button>
             </div>
@@ -41,40 +46,43 @@
         const passwordInput = document.getElementById('password');
         const adminControls = document.getElementById('adminControls');
         const redirectUrlInput = document.getElementById('redirectUrl');
+        const newPasswordInput = document.getElementById('newPassword');
         const saveBtn = document.getElementById('saveBtn');
         const statusMessage = document.getElementById('statusMessage');
         const loader = document.getElementById('loader');
 
-        const SECRET_KEY = 'noyon8181';
+        let correctPassword = '';
+
+        // Fetch current config on page load to get the password
+        async function init() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                correctPassword = data.adminPassword;
+                redirectUrlInput.value = data.redirectUrl;
+            } catch (err) {
+                console.error('Failed to init');
+            }
+        }
+        init();
 
         // Reveal controls if password matches
         passwordInput.addEventListener('input', () => {
-            if (passwordInput.value === SECRET_KEY) {
+            if (passwordInput.value === correctPassword) {
                 adminControls.style.display = 'block';
                 statusMessage.style.display = 'none';
-                fetchConfig(); // Load current URL when logged in
             } else {
                 adminControls.style.display = 'none';
             }
         });
 
-        // Fetch current config
-        async function fetchConfig() {
-            try {
-                const response = await fetch('/api/config');
-                const data = await response.json();
-                redirectUrlInput.value = data.redirectUrl;
-            } catch (err) {
-                showStatus('Failed to load configuration', 'error');
-            }
-        }
-
         async function updateConfig() {
             const redirectUrl = redirectUrlInput.value;
             const password = passwordInput.value;
+            const newPassword = newPasswordInput.value;
 
             if (!redirectUrl || !password) {
-                showStatus('Please fill in both fields', 'error');
+                showStatus('Please fill in required fields', 'error');
                 return;
             }
 
@@ -86,15 +94,19 @@
                 const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ redirectUrl, password })
+                    body: JSON.stringify({ redirectUrl, password, newPassword })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showStatus('Link updated successfully!', 'success');
+                    showStatus('Settings updated successfully!', 'success');
+                    if (newPassword) {
+                        correctPassword = newPassword;
+                        newPasswordInput.value = '';
+                    }
                 } else {
-                    showStatus(result.error || 'Failed to update link.', 'error');
+                    showStatus(result.error || 'Failed to update settings.', 'error');
                 }
             } catch (err) {
                 showStatus('Network error occurred.', 'error');

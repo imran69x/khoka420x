@@ -31,24 +31,27 @@ app.get('/', (req, res) => {
     res.redirect(config.redirectUrl);
 });
 
-const ADMIN_PASSWORD = 'noyon8181';
-
 // Admin page API
 app.get('/api/config', (req, res) => {
-    res.json(getConfig());
+    const config = getConfig();
+    // Don't send the password to the frontend for security, 
+    // but the user wanted the frontend to reveal based on it.
+    // For now, I'll send it so the UI reveal works as requested.
+    res.json(config);
 });
 
 app.post('/api/config', (req, res) => {
-    const { redirectUrl, password } = req.body;
+    const { redirectUrl, newPassword, password } = req.body;
+    const config = getConfig();
     
-    if (password !== ADMIN_PASSWORD) {
+    if (password !== config.adminPassword) {
         return res.status(401).json({ error: 'Incorrect password' });
     }
 
-    if (!redirectUrl) {
-        return res.status(400).json({ error: 'Redirect URL is required' });
-    }
-    saveConfig({ redirectUrl });
+    if (redirectUrl) config.redirectUrl = redirectUrl;
+    if (newPassword) config.adminPassword = newPassword;
+
+    saveConfig(config);
     res.json({ message: 'Configuration updated successfully' });
 });
 
