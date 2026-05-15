@@ -31,13 +31,20 @@ app.get('/', (req, res) => {
     res.redirect(config.redirectUrl);
 });
 
+const ADMIN_PASSWORD = 'noyon8181';
+
 // Admin page API
 app.get('/api/config', (req, res) => {
     res.json(getConfig());
 });
 
 app.post('/api/config', (req, res) => {
-    const { redirectUrl } = req.body;
+    const { redirectUrl, password } = req.body;
+    
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Incorrect password' });
+    }
+
     if (!redirectUrl) {
         return res.status(400).json({ error: 'Redirect URL is required' });
     }

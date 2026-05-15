@@ -14,6 +14,11 @@
             <p class="subtitle">Set your destination link for instant redirection.</p>
             
             <div class="input-group">
+                <label for="password">Admin Password</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+            </div>
+
+            <div class="input-group">
                 <label for="redirectUrl">Target URL</label>
                 <input type="url" id="redirectUrl" placeholder="https://example.com" required>
             </div>
@@ -33,6 +38,7 @@
     </div>
 
     <script>
+        const passwordInput = document.getElementById('password');
         const redirectUrlInput = document.getElementById('redirectUrl');
         const saveBtn = document.getElementById('saveBtn');
         const statusMessage = document.getElementById('statusMessage');
@@ -51,7 +57,12 @@
 
         async function updateConfig() {
             const redirectUrl = redirectUrlInput.value;
-            if (!redirectUrl) return;
+            const password = passwordInput.value;
+
+            if (!redirectUrl || !password) {
+                showStatus('Please fill in both fields', 'error');
+                return;
+            }
 
             saveBtn.disabled = true;
             loader.style.display = 'block';
@@ -61,13 +72,15 @@
                 const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ redirectUrl })
+                    body: JSON.stringify({ redirectUrl, password })
                 });
+
+                const result = await response.json();
 
                 if (response.ok) {
                     showStatus('Link updated successfully!', 'success');
                 } else {
-                    showStatus('Failed to update link.', 'error');
+                    showStatus(result.error || 'Failed to update link.', 'error');
                 }
             } catch (err) {
                 showStatus('Network error occurred.', 'error');
